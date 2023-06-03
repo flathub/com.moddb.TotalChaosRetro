@@ -61,7 +61,7 @@ modules:
     buildsystem: simple
     sources:
       - type: archive
-        url: https://github.com/mbugni/TotalChaosRetro/releases/download/v1.40/totalchaos_dc_retro_b5.zip
+        url: https://github.com/mbugni/TotalChaosLegacy/releases/download/v1.40/totalchaos_dc_retro_b5.zip
         sha256: 0d8a87edc4fc4ab84495b23bfe655742721195a094dbe604072183842f84336e
       - type: file
         path: com.moddb.TotalChaosRetro.appdata.xml
