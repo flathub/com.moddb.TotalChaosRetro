@@ -1,6 +1,6 @@
 app-id: com.moddb.TotalChaosRetro
 runtime: org.freedesktop.Platform
-runtime-version: '22.08'
+runtime-version: '23.08'
 sdk: org.freedesktop.Sdk
 command: gzdoom.sh
 finish-args:
@@ -17,37 +17,79 @@ cleanup:
   - /include
   - /lib/*.a
   - /lib/*.la
-  - /lib/pkgconfig
+  - /lib*/cmake
+  - /lib*/pkgconfig
+  - /lib*/source
+  - /lib*/debug
+  - /share/doc
   - /share/man
+  - /share/help
+
 modules:
   - shared-modules/linux-audio/fluidsynth2.json
 
   - name: zmusic
     buildsystem: cmake-ninja
     config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_BUILD_TYPE=Release
     sources:
       - type: archive
-        url: https://github.com/ZDoom/ZMusic/archive/refs/tags/1.1.12.tar.gz
-        sha256: da818594b395aa9174561a36362332b0ab8e7906d2e556ec47669326e67613d4
+        url: https://github.com/ZDoom/ZMusic/archive/refs/tags/1.1.13.tar.gz
+        sha256: 564e210837b653013e01d67f04d0d906a9f0a923521e0c305463ec4f4a139ed4
 
-  - name: gzdoom
+  - name: libjpeg # with jpeg.so.8
     buildsystem: cmake-ninja
-    build-options:
-      cxxflags: -std=c++17
     config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - -DSEND_ANON_STATS=OFF
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_SKIP_RPATH:BOOL=YES
+      - -DENABLE_STATIC:BOOL=NO
+      - -DWITH_JPEG8:BOOL=YES
+      - -DCMAKE_INSTALL_LIBDIR=/app/lib # uses lib64 by default
     sources:
       - type: archive
-        url: https://github.com/coelckers/gzdoom/archive/g4.10.0.tar.gz
-        sha256: 8702522c05048dfd4a765c6ac82a270d8bd0942e813d5bc6f4b69795a5d23a20
+        url: https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/2.1.3.tar.gz
+        sha256: dbda0c685942aa3ea908496592491e5ec8160d2cf1ec9d5fd5470e50768e7859
+
+  - name: libbzip2
+    buildsystem: simple
+    sources:
+      - type: archive
+        url: https://gitlab.com/bzip2/bzip2/-/archive/bzip2-1.0.8/bzip2-bzip2-1.0.8.tar.gz
+        sha256: db106b740252669664fd8f3a1c69fe7f689d5cd4b132f82ba82b9afba27627df
+    build-commands:
+      - make -f Makefile-libbz2_so
+      - install -Dm 755 libbz2.so.1.0.8 /app/lib/libbz2.so.1.0.8
+      - cd /app/lib && ln -s libbz2.so.1.0.8 libbz2.so.1.0
+
+  - name: libvpx
+    config-opts:
+      - --enable-libs
+      - --enable-install-libs
+      - --enable-shared
+      - --disable-examples
+      - --disable-install-docs
+      - --disable-install-srcs
+      - --disable-unit-tests
+    sources:
+      - type: archive
+        url: https://github.com/webmproject/libvpx/archive/refs/tags/v1.7.0.tar.gz
+        sha256: 1fec931eb5c94279ad219a5b6e0202358e94a93a90cfb1603578c326abfc1238
+  
+  - name: gzdoom
+    buildsystem: simple
+    sources:
+      - type: archive
+        url: https://zdoom.org/files/gzdoom/bin/GZDoom.v4.10.0.LinuxPortable.tar.xz
+        sha256: 4c3a3753b187676e9acc3e807bd4e860ba048358779944427e3c44ed6912a815
       - type: script
         commands:
           - '[ ! -f ~/.config/gzdoom/gzdoom.ini ] && cp /app/share/games/doom/gzdoom_portable.ini ~/.config/gzdoom/gzdoom.ini'
           - 'exec gzdoom -file totalchaos.pk3 +fluid_patchset /app/share/games/doom/soundfonts/gzdoom.sf2 "$@"'
         dest-filename: gzdoom.sh
-    post-install:
+    build-commands:
+      - install -Dm 755 gzdoom /app/bin/gzdoom
+      - install -Dm 644 soundfonts/gzdoom.sf2 /app/share/games/doom/soundfonts/gzdoom.sf2
+      - cp *.pk3 /app/share/games/doom
       - install -Dm 755 gzdoom.sh /app/bin/gzdoom.sh
 
   - name: freedoom2
@@ -86,7 +128,9 @@ modules:
       - sed -i 's/texture2D/texture/g' SHADERS/old.fp
       - zip -u totalchaos.pk3 SHADERS/old.fp
       # Install files
+      - cp -R fm_banks /app/share/games/doom
       - install -Dm 644 totalchaos.pk3 -t /app/share/games/doom
+      - install -Dm 644 zd_extra.pk3 -t /app/share/games/doom
       - install -Dm 644 gzdoom_portable.ini -t /app/share/games/doom
       - install -Dm 644 com.moddb.TotalChaosRetro.appdata.xml -t /app/share/appdata
       - install -Dm 644 com.moddb.TotalChaosRetro.desktop -t /app/share/applications
