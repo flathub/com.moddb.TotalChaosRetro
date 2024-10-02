@@ -1,6 +1,6 @@
 app-id: com.moddb.TotalChaosRetro
 runtime: org.freedesktop.Platform
-runtime-version: '22.08'
+runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 command: gzdoom.sh
 finish-args:
@@ -17,37 +17,49 @@ cleanup:
   - /include
   - /lib/*.a
   - /lib/*.la
-  - /lib/pkgconfig
+  - /lib*/cmake
+  - /lib*/pkgconfig
+  - /lib*/source
+  - /lib*/debug
+  - /share/doc
   - /share/man
+  - /share/help
 modules:
   - shared-modules/linux-audio/fluidsynth2.json
 
   - name: zmusic
     buildsystem: cmake-ninja
     config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_BUILD_TYPE=Release
     sources:
       - type: archive
-        url: https://github.com/ZDoom/ZMusic/archive/refs/tags/1.1.12.tar.gz
-        sha256: da818594b395aa9174561a36362332b0ab8e7906d2e556ec47669326e67613d4
+        url: https://github.com/zdoom/ZMusic/archive/1.1.13.tar.gz
+        sha256: 564e210837b653013e01d67f04d0d906a9f0a923521e0c305463ec4f4a139ed4
+    build-commands:
+      - cd /app/lib && ln -s ../lib64/libzmusic.so.1 libzmusic.so.1
 
   - name: gzdoom
     buildsystem: cmake-ninja
-    build-options:
-      cxxflags: -std=c++17
     config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - -DSEND_ANON_STATS=OFF
+      - -DCMAKE_BUILD_TYPE=Release
+    build-options:
+      env:  
+        CXXFLAGS: -Wno-error=template-id-cdtor -Wno-template-id-cdtor
     sources:
       - type: archive
-        url: https://github.com/coelckers/gzdoom/archive/g4.10.0.tar.gz
+        url: https://github.com/ZDoom/gzdoom/archive/refs/tags/g4.10.0.tar.gz
         sha256: 8702522c05048dfd4a765c6ac82a270d8bd0942e813d5bc6f4b69795a5d23a20
+      - type: patch
+        path: gcc14.patch
       - type: script
         commands:
           - '[ ! -f ~/.config/gzdoom/gzdoom.ini ] && cp /app/share/games/doom/gzdoom_portable.ini ~/.config/gzdoom/gzdoom.ini'
           - 'exec gzdoom -file totalchaos.pk3 +fluid_patchset /app/share/games/doom/soundfonts/gzdoom.sf2 "$@"'
         dest-filename: gzdoom.sh
-    post-install:
+    build-commands:
+      - install -Dm 755 gzdoom /app/bin/gzdoom
+      - install -Dm 644 soundfonts/gzdoom.sf2 /app/share/games/doom/soundfonts/gzdoom.sf2
+      - cp *.pk3 /app/share/games/doom
       - install -Dm 755 gzdoom.sh /app/bin/gzdoom.sh
 
   - name: freedoom2
@@ -86,7 +98,9 @@ modules:
       - sed -i 's/texture2D/texture/g' SHADERS/old.fp
       - zip -u totalchaos.pk3 SHADERS/old.fp
       # Install files
+      - cp -R fm_banks /app/share/games/doom
       - install -Dm 644 totalchaos.pk3 -t /app/share/games/doom
+      - install -Dm 644 zd_extra.pk3 -t /app/share/games/doom
       - install -Dm 644 gzdoom_portable.ini -t /app/share/games/doom
       - install -Dm 644 com.moddb.TotalChaosRetro.appdata.xml -t /app/share/appdata
       - install -Dm 644 com.moddb.TotalChaosRetro.desktop -t /app/share/applications
