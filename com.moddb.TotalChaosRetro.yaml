@@ -10,6 +10,7 @@ finish-args:
   - --share=ipc
   - --socket=pulseaudio
   - --env=DOOMWADDIR=/app/share/games/doom
+  - --env=PROGDIR=/app/share/games/doom
   - --persist=.config/gzdoom
   # Simpler way of preventing KDE related errors
   - --env=KDE_FULL_SESSION=false
@@ -33,7 +34,7 @@ modules:
       - -DCMAKE_BUILD_TYPE=Release
     sources:
       - type: archive
-        url: https://github.com/zdoom/ZMusic/archive/1.1.13.tar.gz
+        url: https://github.com/ZDoom/ZMusic/archive/1.1.13.tar.gz
         sha256: 564e210837b653013e01d67f04d0d906a9f0a923521e0c305463ec4f4a139ed4
     build-commands:
       - cd /app/lib && ln -s ../lib64/libzmusic.so.1 libzmusic.so.1
@@ -57,9 +58,6 @@ modules:
           - 'exec gzdoom -file totalchaos.pk3 +fluid_patchset /app/share/games/doom/soundfonts/gzdoom.sf2 "$@"'
         dest-filename: gzdoom.sh
     build-commands:
-      - install -Dm 755 gzdoom /app/bin/gzdoom
-      - install -Dm 644 soundfonts/gzdoom.sf2 /app/share/games/doom/soundfonts/gzdoom.sf2
-      - cp *.pk3 /app/share/games/doom
       - install -Dm 755 gzdoom.sh /app/bin/gzdoom.sh
 
   - name: freedoom2
@@ -75,8 +73,8 @@ modules:
     buildsystem: simple
     sources:
       - type: archive
-        url: https://github.com/mbugni/TotalChaosLegacy/releases/download/v1.40/totalchaos_dc_retro_b5.zip
-        sha256: 0d8a87edc4fc4ab84495b23bfe655742721195a094dbe604072183842f84336e
+        url: https://github.com/mbugni/totalchaos-gamedata/releases/download/v1.40.0/totalchaos-retro-gamedata.tgz
+        sha256: 0cb7b2bf6606a061c714555e08261e7851a05d04e9e6f5223131c128c4d0439c
       - type: file
         path: com.moddb.TotalChaosRetro.appdata.xml
       - type: file
@@ -98,10 +96,9 @@ modules:
       - sed -i 's/texture2D/texture/g' SHADERS/old.fp
       - zip -u totalchaos.pk3 SHADERS/old.fp
       # Install files
-      - cp -R fm_banks /app/share/games/doom
       - install -Dm 644 totalchaos.pk3 -t /app/share/games/doom
       - install -Dm 644 zd_extra.pk3 -t /app/share/games/doom
       - install -Dm 644 gzdoom_portable.ini -t /app/share/games/doom
-      - install -Dm 644 com.moddb.TotalChaosRetro.appdata.xml -t /app/share/appdata
-      - install -Dm 644 com.moddb.TotalChaosRetro.desktop -t /app/share/applications
-      - install -Dm 644 com.moddb.TotalChaosRetro.png -t /app/share/icons/hicolor/128x128/apps
+      - install -Dm 644 ${FLATPAK_ID}.appdata.xml -t /app/share/appdata
+      - install -Dm 644 ${FLATPAK_ID}.desktop -t /app/share/applications
+      - install -Dm 644 ${FLATPAK_ID}.png -t /app/share/icons/hicolor/128x128/apps
