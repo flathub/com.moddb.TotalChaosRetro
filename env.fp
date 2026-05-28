@@ -8,23 +8,20 @@ Material ProcessMaterial()
 
     Material material;
     
-    // FIX: Replaced unstable transpose(tbn) matrix operation to prevent NaN/black/white artifacts on modern GPUs.
-    // Also added a tiny offset (+ 0.0001) to eliminate potential division-by-zero when close to the object.
+    // Maintain the original texture coordinates but eliminate the unstable transpose matrix calculation
     vec3 viewDir = uCameraPos.xyz - pixelpos.xyz;
-    float dist = length(viewDir) + 0.0001;
-    vec2 dCoord = (viewDir.xy / dist) + (texture(normaltexture, texCoord).xy * 0.2);
+    vec2 dCoord = texCoord + (viewDir.xy * 0.001) + (texture(normaltexture, texCoord).xy * 0.2);
     
     vec4 addEnv = texture(displacement, dCoord);
-	
 	addEnv *= texture(envmask, texCoord);
 	
-    // FIX: Clamped the combined color channels to a 0.0 - 1.0 range.
-    // This stops the yellow flashing/glowing pick-up indicator from oversaturating into pure white.
+    // FIX: Pure linear blend (mix) instead of brute addition.
+    // This preserves the exact yellow flashing/glowing pick-up animation 
+    // and prevents the texture from oversaturating into solid white on modern engines.
     material.Base = getTexel(texCoord);
-    material.Base.rgb = clamp(material.Base.rgb + addEnv.rgb, 0.0, 1.0);
+    material.Base.rgb = mix(material.Base.rgb, addEnv.rgb, 0.6);
 	
     material.Normal = GetBumpedNormal(tbn, texCoord);
-	
 	
 #if defined(SPECULAR)
     material.Specular = texture(speculartexture, texCoord).rgb;
