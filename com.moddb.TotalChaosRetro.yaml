@@ -94,7 +94,7 @@ modules:
       - type: file
         path: totalchaos.sh
       - type: file
-        path: invglow.fp
+        path: env.fp
     build-commands:
       # Patch GZDoom defaults to avoid problems with some GPU drivers
       - sed -i 's/tc_pp_noise=true/tc_pp_noise=false/g' gzdoom_portable.ini
@@ -110,8 +110,8 @@ modules:
       - sed -i 's/texture2D/texture/g' SHADERS/old.fp
       - zip -u totalchaos.pk3 SHADERS/old.fp
       # Patch shaders to fix lighting issues
-      - cp invglow.fp SHADERS/invglow.fp
-      - zip -u totalchaos.pk3 SHADERS/invglow.fp
+      - cp env.fp SHADERS/env.fp
+      - zip -u totalchaos.pk3 SHADERS/env.fp
       # Install files
       - install -Dm 644 totalchaos.pk3 -t /app/share/games/uzdoom
       - install -Dm 644 zd_extra.pk3 -t /app/share/games/uzdoom
